@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createInviteToken, hashInviteToken, isAdminAuthorized } from "@/lib/signing-security";
+import { createInviteToken, hashInviteToken, isAdminAuthorized, isSameOriginRequest } from "@/lib/signing-security";
 
 export const runtime = "nodejs";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: "درخواست نامعتبر است." }, { status: 403 });
   if (!isAdminAuthorized(request)) return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 401 });
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "پایگاه داده پیکربندی نشده است" }, { status: 503 });
   const { id } = await context.params;
@@ -21,6 +22,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  if (!isSameOriginRequest(request)) return NextResponse.json({ error: "درخواست نامعتبر است." }, { status: 403 });
   if (!isAdminAuthorized(request)) return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 401 });
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "پایگاه داده پیکربندی نشده است" }, { status: 503 });
   const { id } = await context.params;
