@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createAdminSession, adminSessionCookie, isSameOriginRequest } from "@/lib/signing-security";
 
@@ -9,11 +10,9 @@ export async function POST(request: Request) {
   if (!configured) return NextResponse.json({ error: "کلید مدیر در سرور تنظیم نشده است." }, { status: 503 });
   const input = await request.json().catch(() => ({}));
   const supplied = typeof input.key === "string" ? input.key : "";
-  if (supplied.length !== configured.length || supplied.length > 256) {
-    return NextResponse.json({ error: "کلید دسترسی نادرست است." }, { status: 401 });
-  }
-  const { timingSafeEqual } = await import("node:crypto");
-  if (!timingSafeEqual(Buffer.from(supplied), Buffer.from(configured))) {
+  const expectedBytes = Buffer.from(configured);
+  const suppliedBytes = Buffer.from(supplied);
+  if (expectedBytes.length !== suppliedBytes.length || suppliedBytes.length > 256 || !timingSafeEqual(expectedBytes, suppliedBytes)) {
     return NextResponse.json({ error: "کلید دسترسی نادرست است." }, { status: 401 });
   }
   const response = NextResponse.json({ ok: true });
