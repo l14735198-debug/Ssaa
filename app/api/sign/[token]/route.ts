@@ -17,11 +17,11 @@ export async function POST(request: Request, context: { params: Promise<{ token:
  const signer = await prisma.signer.findUnique({ where: { tokenHash: hashInviteToken(token) } });
  if (!signer || signer.revokedAt || signer.tokenExpiresAt < new Date()) return NextResponse.json({ error: "این لینک نامعتبر، لغوشده یا منقضی شده است." }, { status: 404 });
  if (signer.signedAt) return NextResponse.json({ error: "امضا قبلاً ثبت شده است." }, { status: 409 });
- const input = await request.json(); const nationalId = String(input.nationalId || "").trim(); const birthDate = String(input.birthDate || "").trim(); const signature = String(input.signature || ""); const fingerprintDrawing = String(input.fingerprintDrawing || "");
- if (input.accepted !== true || !/^\d{10}$/.test(nationalId) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || !signature.startsWith("data:image/png;base64,") || signature.length > 180000 || !fingerprintDrawing.startsWith("data:image/png;base64,") || fingerprintDrawing.length > 180000) return NextResponse.json({ error: "کد ملی، تاریخ تولد، پذیرش مفاد، اثر انگشت ترسیمی و امضای معتبر الزامی است." }, { status: 400 });
+ const input = await request.json(); const nationalId = String(input.nationalId || "").trim(); const birthDate = String(input.birthDate || "").trim(); const signature = String(input.signature || "");
+ if (input.accepted !== true || !/^\d{10}$/.test(nationalId) || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || !signature.startsWith("data:image/png;base64,") || signature.length > 180000) return NextResponse.json({ error: "کد ملی، تاریخ تولد، پذیرش مفاد و امضای معتبر الزامی است." }, { status: 400 });
  const signedAt = new Date();
- const saved = await prisma.signer.updateMany({ where: { id: signer.id, signedAt: null, revokedAt: null, tokenExpiresAt: { gt: signedAt } }, data: { acceptedTerms: true, signatureData: signature, fingerprintDrawing, identityEncrypted: encryptIdentity({ nationalId, birthDate }), signedAt } });
+ const saved = await prisma.signer.updateMany({ where: { id: signer.id, signedAt: null, revokedAt: null, tokenExpiresAt: { gt: signedAt } }, data: { acceptedTerms: true, signatureData: signature, identityEncrypted: encryptIdentity({ nationalId, birthDate }), signedAt } });
  if (saved.count !== 1) return NextResponse.json({ error: "وضعیت لینک تغییر کرده است؛ صفحه را دوباره بارگذاری کنید." }, { status: 409 });
- await prisma.signingEvent.create({ data: { contractId: signer.contractId, signerId: signer.id, type: "SIGNATURE_RECORDED", metadata: { method: "DRAWN_SIGNATURE_AND_FINGERPRINT_MARK" } } });
- return NextResponse.json({ ok: true, signedAt: signedAt.toISOString(), note: "امضا و اثر انگشت ترسیمی ثبت شد؛ اثر ترسیمی، اسکن بیومتریک واقعی نیست." });
+ await prisma.signingEvent.create({ data: { contractId: signer.contractId, signerId: signer.id, type: "SIGNATURE_RECORDED", metadata: { method: "DRAWN_SIGNATURE" } } });
+ return NextResponse.json({ ok: true, signedAt: signedAt.toISOString(), note: "امضا ثبت شد." });
 }
