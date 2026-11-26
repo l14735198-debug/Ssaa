@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Draft = { id: string; title: string; createdAt: string; status: string; body: string; obligor: string; obligee: string; subject: string; amount: string; dueDate: string; mode: "blank" | "prefill" };
+type Draft = { id: string; title: string; createdAt: string; status: string; body: string; obligor: string; obligee: string; subject: string; amount: string; dueDate: string; notes: string; mode: "blank" | "prefill" };
 
 const STORAGE_KEY = "contract-drafts-v1";
 const template = `قرارداد تعهد
@@ -48,7 +48,7 @@ export default function ContractEditor({ contractId }: { contractId?: string }) 
       const found = all.find((item) => item.id === contractId);
       if (found) {
         setTitle(found.title); setObligor(found.obligor); setObligee(found.obligee);
-        setSubject(found.subject); setAmount(found.amount); setDueDate(found.dueDate);
+        setSubject(found.subject); setAmount(found.amount); setDueDate(found.dueDate); setNotes(found.notes || '');
         setMode(found.mode); setBody(found.body);
       }
     } catch { /* ignore invalid local draft data */ }
@@ -69,7 +69,7 @@ export default function ContractEditor({ contractId }: { contractId?: string }) 
 
   function saveDraft() {
     const id = contractId || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-    const item: Draft = { id, title, createdAt: new Date().toISOString(), status: "پیش‌نویس", body, obligor, obligee, subject, amount, dueDate, mode };
+    const item: Draft = { id, title, createdAt: new Date().toISOString(), status: "پیش‌نویس", body, obligor, obligee, subject, amount, dueDate, notes, mode };
     try {
       const all: Draft[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const next = all.some((draft) => draft.id === id) ? all.map((draft) => draft.id === id ? item : draft) : [item, ...all];
