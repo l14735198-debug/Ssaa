@@ -1,53 +1,50 @@
 generator client {
-  provider = "prisma-client-js"
+ provider = "prisma-client-js"
 }
-
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
+ provider = "postgresql"
+ url = env("DATABASE_URL")
+ directUrl = env("DATABASE_URL_UNPOOLED")
 }
-
 model Contract {
-  id        String   @id @default(cuid())
-  title     String
-  body      String   @db.Text
-  bodyHash  String
-  status    String   @default("DRAFT")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  signers   Signer[]
-  events    SigningEvent[]
+ id String @id @default(cuid())
+ title String
+ body String @db.Text
+ bodyHash String
+ status String @default("DRAFT")
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ signers Signer[]
+ events SigningEvent[]
 }
-
 model Signer {
-  id                String   @id @default(cuid())
-  contractId        String
-  contract          Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  fullName          String
-  role              String
-  tokenHash         String   @unique
-  tokenExpiresAt    DateTime
-  revokedAt         DateTime?
-  viewedAt          DateTime?
-  signedAt          DateTime?
-  acceptedTerms     Boolean  @default(false)
-  signatureData     String?  @db.Text
-  identityEncrypted String?  @db.Text
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  events            SigningEvent[]
-  @@index([contractId])
+ id String @id @default(cuid())
+ contractId String
+ contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+ fullName String
+ role String
+ tokenHash String @unique
+ tokenExpiresAt DateTime
+ revokedAt DateTime?
+ viewedAt DateTime?
+ signedAt DateTime?
+ acceptedTerms Boolean @default(false)
+ signatureData String? @db.Text
+ fingerprintDrawing String? @db.Text
+ identityEncrypted String? @db.Text
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ events SigningEvent[]
+ @@index([contractId])
 }
-
 model SigningEvent {
-  id         String   @id @default(cuid())
-  contractId String
-  signerId   String?
-  type       String
-  metadata   Json?
-  createdAt  DateTime @default(now())
-  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  signer     Signer?  @relation(fields: [signerId], references: [id], onDelete: SetNull)
-  @@index([contractId, createdAt])
+ id String @id @default(cuid())
+ contractId String
+ signerId String?
+ type String
+ metadata Json?
+ createdAt DateTime @default(now())
+ contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+ signer Signer? @relation(fields: [signerId], references: [id], onDelete: SetNull)
+ @@index([contractId, createdAt])
 }
