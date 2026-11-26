@@ -1,0 +1,1 @@
+ALTER TABLE "Signer" ADD COLUMN "fingerprintDrawing" TEXT;
